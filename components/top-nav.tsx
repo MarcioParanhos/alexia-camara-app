@@ -9,11 +9,14 @@ import { useState, useRef, useEffect } from "react";
 export function TopNav({
   links,
   userName,
+  role,
 }: {
   links: { href: string; label: string }[];
   userName: string;
+  role?: string | null;
 }) {
   const pathname = usePathname();
+  const filteredLinks = links.filter((l) => (l.href === "/admin" ? role === "ADMIN" : true));
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
@@ -38,7 +41,7 @@ export function TopNav({
         <span className="font-display italic font-semibold text-primary-dark text-lg shrink-0">Alexia Câmara</span>
 
         <div className="flex items-center gap-1 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
-          {links.map((l) => {
+          {filteredLinks.map((l) => {
             const ativo = pathname === l.href || (l.href !== "/dashboard" && pathname.startsWith(l.href));
             return (
               <Link
