@@ -7,3 +7,5 @@ node_modules
 # sensíveis de paciente, nunca devem ir para o controle de versão.
 # Em produção, trocar o storage local por um provedor externo (S3 etc.)
 uploads/
+
+.vercel
