@@ -1,0 +1,31 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: alexia-camara-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: alexia
+      POSTGRES_PASSWORD: alexia_dev_pw
+      POSTGRES_DB: alexia_camara
+    ports:
+      - "5432:5432"
+    volumes:
+      - alexia_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U alexia -d alexia_camara"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Opcional: interface visual para explorar o banco em http://localhost:8081
+  adminer:
+    image: adminer:latest
+    container_name: alexia-camara-adminer
+    restart: unless-stopped
+    ports:
+      - "8081:8080"
+    depends_on:
+      - db
+
+volumes:
+  alexia_db_data:

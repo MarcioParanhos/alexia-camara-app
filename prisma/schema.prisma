@@ -1,0 +1,267 @@
+// Schema do prontuário eletrônico Alexia Câmara
+// Reflete o que foi validado nas telas: paciente -> fases da trilha ->
+// registros de evolução, acesso da família por convite ou link, e
+// relatórios com a marca da fisioterapeuta.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------
+// Autenticação e papéis
+// ---------------------------------------------------------------
+
+enum Role {
+  ADMIN
+  PROFISSIONAL
+  FAMILIAR
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(FAMILIAR)
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Presente apenas quando role = PROFISSIONAL
+  professional Professional?
+
+  // Presente quando role = FAMILIAR e o convite já foi aceito
+  familyMemberships FamilyMember[]
+
+  evolutionsAuthored Evolution[] @relation("EvolutionAuthor")
+  reportsGenerated   Report[]    @relation("ReportGeneratedBy")
+
+  @@map("users")
+}
+
+// ---------------------------------------------------------------
+// Profissional — hoje só a Alexia, preparado para outros depois
+// ---------------------------------------------------------------
+
+model Professional {
+  id         String  @id @default(cuid())
+  userId     String  @unique
+  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  crefito     String?
+  specialty   String?
+  bio         String? // aparece no rodapé dos relatórios
+  clinicName  String?
+
+  // Identidade visual usada nos relatórios e no portal da família
+  brandColor String  @default("#3F6B58")
+  logoUrl    String?
+
+  patients Patient[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("professionals")
+}
+
+// ---------------------------------------------------------------
+// Paciente
+// ---------------------------------------------------------------
+
+enum PatientStatus {
+  EM_TRATAMENTO
+  ALTA
+  PAUSADO
+}
+
+model Patient {
+  id             String        @id @default(cuid())
+  professionalId String
+  professional   Professional  @relation(fields: [professionalId], references: [id], onDelete: Restrict)
+
+  name            String
+  birthDate       DateTime?
+  phone           String?
+  email           String?
+  photoUrl        String?
+
+  diagnosis       String?
+  referredBy      String?
+  clinicalHistory String?
+
+  status    PatientStatus @default(EM_TRATAMENTO)
+  startDate DateTime      @default(now())
+
+  phases        TreatmentPhase[]
+  evolutions    Evolution[]
+  attachments   Attachment[]
+  familyMembers FamilyMember[]
+  accessLinks   AccessLink[]
+  reports       Report[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([professionalId])
+  @@map("patients")
+}
+
+// Fases da trilha de tratamento — definidas no cadastro do paciente
+model TreatmentPhase {
+  id        String   @id @default(cuid())
+  patientId String
+  patient   Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  name            String
+  objective       String?
+  order           Int     @default(0)
+  plannedSessions Int     @default(0)
+  color           String  @default("#3F6B58")
+
+  evolutions Evolution[]
+
+  createdAt DateTime @default(now())
+
+  @@index([patientId])
+  @@map("treatment_phases")
+}
+
+// ---------------------------------------------------------------
+// Evolução — cada sessão registrada vira um marco na trilha
+// ---------------------------------------------------------------
+
+model Evolution {
+  id        String   @id @default(cuid())
+  patientId String
+  patient   Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  phaseId String?
+  phase   TreatmentPhase? @relation(fields: [phaseId], references: [id], onDelete: SetNull)
+
+  authorId String
+  author   User   @relation("EvolutionAuthor", fields: [authorId], references: [id], onDelete: Restrict)
+
+  title       String
+  note        String   @db.Text
+  painLevel   Int?     // escala EVA, 0-10
+  romDegrees  Int?     // amplitude de movimento em graus
+  highlighted Boolean  @default(false) // "marco" em destaque para a família
+
+  sessionDate DateTime @default(now())
+
+  attachments Attachment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([patientId, sessionDate])
+  @@map("evolutions")
+}
+
+model Attachment {
+  id        String   @id @default(cuid())
+  patientId String
+  patient   Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  evolutionId String?
+  evolution   Evolution? @relation(fields: [evolutionId], references: [id], onDelete: SetNull)
+
+  fileName String
+  url      String
+  fileType String?
+
+  uploadedAt DateTime @default(now())
+
+  @@index([patientId])
+  @@map("attachments")
+}
+
+// ---------------------------------------------------------------
+// Acesso da família — por convite (vira User) ou por link
+// ---------------------------------------------------------------
+
+enum FamilyMemberStatus {
+  PENDENTE
+  ATIVO
+}
+
+model FamilyMember {
+  id        String  @id @default(cuid())
+  patientId String
+  patient   Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  // Vinculado a um User (role FAMILIAR) somente após aceitar o convite
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  name         String
+  relationship String
+  email        String
+
+  status       FamilyMemberStatus @default(PENDENTE)
+  inviteToken  String?            @unique
+  invitedAt    DateTime           @default(now())
+  lastAccessAt DateTime?
+
+  @@unique([patientId, email])
+  @@map("family_members")
+}
+
+// Link de acesso somente-leitura, sem exigir cadastro de cada familiar.
+// Pode ser um link geral da trilha do paciente (reportId nulo) ou um
+// link específico de UM relatório já gerado (reportId preenchido) —
+// nesse caso o profissional escolhe por quanto tempo ele fica disponível.
+model AccessLink {
+  id        String   @id @default(cuid())
+  patientId String
+  patient   Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  reportId String?
+  report   Report? @relation(fields: [reportId], references: [id], onDelete: Cascade)
+
+  token     String   @unique @default(cuid())
+  expiresAt DateTime
+  revoked   Boolean  @default(false)
+
+  createdAt    DateTime  @default(now())
+  lastAccessAt DateTime?
+
+  @@index([patientId])
+  @@index([reportId])
+  @@map("access_links")
+}
+
+// ---------------------------------------------------------------
+// Relatório — snapshot gerado com a marca do profissional
+// ---------------------------------------------------------------
+
+model Report {
+  id        String  @id @default(cuid())
+  patientId String
+  patient   Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  generatedById String
+  generatedBy   User   @relation("ReportGeneratedBy", fields: [generatedById], references: [id], onDelete: Restrict)
+
+  periodStart DateTime
+  periodEnd   DateTime
+
+  // Conteúdo consolidado no momento da geração (fases, métricas, parecer)
+  // — assim o relatório não muda retroativamente se os dados do paciente mudarem depois
+  snapshot Json
+
+  pdfUrl String?
+
+  accessLinks AccessLink[]
+
+  createdAt DateTime @default(now())
+
+  @@index([patientId])
+  @@map("reports")
+}
