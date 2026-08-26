@@ -123,14 +123,15 @@ export async function GET(request: Request, { params }: { params: { reportId: st
     const buffer = await renderToBuffer(Doc);
 
     // Retorno utilizando a Web API global Response (Obrigatório para arquivos na Vercel)
-    return new Response(buffer, {
-      status: 200,
-      headers: {
-        "Content-Type": "application/pdf",
-        "Content-Length": buffer.byteLength.toString(),
-        "Content-Disposition": `inline; filename="report-${reportId}.pdf"`,
-      },
-    });
+    // DEPOIS (Aprovado pelo TypeScript)
+return new Response(buffer as unknown as BodyInit, {
+  status: 200,
+  headers: {
+    "Content-Type": "application/pdf",
+    "Content-Length": buffer.byteLength.toString(),
+    "Content-Disposition": `inline; filename="report-${reportId}.pdf"`,
+  },
+});
 
   } catch (error) {
     // Isolamento de falha (evita o crash silencioso)
