@@ -12,6 +12,7 @@ type FamilyMember = {
   email: string;
   status: "PENDENTE" | "ATIVO";
   lastAccessAt: string | Date | null;
+  inviteToken: string | null;
 };
 
 type AccessLink = {
@@ -35,7 +36,7 @@ export function GestaoAcessosPainel({
   const [email, setEmail] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [erroConvite, setErroConvite] = useState<string | null>(null);
-  const [linkConvite, setLinkConvite] = useState<string | null>(null);
+  const [copiadoId, setCopiadoId] = useState<string | null>(null);
 
   // Link de acesso
   const [gerandoLink, setGerandoLink] = useState(false);
@@ -48,7 +49,6 @@ export function GestaoAcessosPainel({
   async function enviarConvite(e: React.FormEvent) {
     e.preventDefault();
     setErroConvite(null);
-    setLinkConvite(null);
 
     if (!nome.trim() || !parentesco.trim() || !email.trim()) {
       setErroConvite("Preencha nome, parentesco e e-mail.");
@@ -65,7 +65,6 @@ export function GestaoAcessosPainel({
       const data = await resp.json();
       if (!resp.ok) throw new Error(data?.error || "Não foi possível enviar o convite.");
 
-      setLinkConvite(data.inviteUrl);
       setNome("");
       setParentesco("");
       setEmail("");
@@ -101,6 +100,13 @@ export function GestaoAcessosPainel({
     await navigator.clipboard.writeText(url);
     setCopiado(true);
     setTimeout(() => setCopiado(false), 1500);
+  }
+
+  async function copiarConvite(token: string, id: string) {
+    const url = `${appUrl}/convite/${token}`;
+    await navigator.clipboard.writeText(url);
+    setCopiadoId(id);
+    setTimeout(() => setCopiadoId(null), 1500);
   }
 
   return (
@@ -146,15 +152,6 @@ export function GestaoAcessosPainel({
           >
             <UserPlus size={14} /> {enviando ? "Enviando..." : "Enviar convite"}
           </button>
-
-          {linkConvite && (
-            <div className="mt-4 rounded-lg p-3 bg-surface border border-line">
-              <p className="text-xs text-inkFaint mb-1">
-                Envio automático de e-mail ainda não está configurado — copie e envie este link manualmente por enquanto:
-              </p>
-              <p className="text-xs font-mono break-all text-ink">{linkConvite}</p>
-            </div>
-          )}
         </form>
       ) : (
         <div className="rounded-xl p-5 sm:p-6 mb-6 bg-white border border-line w-full">
@@ -208,26 +205,48 @@ export function GestaoAcessosPainel({
       ) : (
         <div className="space-y-2.5 w-full">
           {paciente.familyMembers.map((f) => (
-            <div key={f.id} className="flex flex-wrap sm:flex-nowrap items-center gap-3 rounded-xl p-4 bg-white border border-line">
-              <Avatar nome={f.name} size={38} />
-              <div className="flex-1 min-w-[140px]">
-                <p className="text-sm truncate font-medium text-ink">{f.name}</p>
-                <p className="text-xs truncate text-inkFaint">
-                  {f.relationship} · {f.email}
-                </p>
+            <div key={f.id} className="rounded-xl bg-white border border-line overflow-hidden">
+              <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 p-4">
+                <Avatar nome={f.name} size={38} />
+                <div className="flex-1 min-w-[140px]">
+                  <p className="text-sm truncate font-medium text-ink">{f.name}</p>
+                  <p className="text-xs truncate text-inkFaint">
+                    {f.relationship} · {f.email}
+                  </p>
+                </div>
+                <span
+                  className="text-[11px] px-2.5 py-1 rounded-full shrink-0"
+                  style={{
+                    background: f.status === "ATIVO" ? "#DCE5DA" : "#F1E2C2",
+                    color: f.status === "ATIVO" ? "#2C4B3E" : "#B9812F",
+                  }}
+                >
+                  {f.status === "ATIVO" ? "Ativo" : "Pendente"}
+                </span>
+                <button onClick={() => removerFamiliar(f.id)}>
+                  <Trash2 size={14} className="text-inkFaint" />
+                </button>
               </div>
-              <span
-                className="text-[11px] px-2.5 py-1 rounded-full shrink-0"
-                style={{
-                  background: f.status === "ATIVO" ? "#DCE5DA" : "#F1E2C2",
-                  color: f.status === "ATIVO" ? "#2C4B3E" : "#B9812F",
-                }}
-              >
-                {f.status === "ATIVO" ? "Ativo" : "Pendente"}
-              </span>
-              <button onClick={() => removerFamiliar(f.id)}>
-                <Trash2 size={14} className="text-inkFaint" />
-              </button>
+
+              {f.status === "PENDENTE" && f.inviteToken && (
+                <div className="flex items-center gap-2 px-4 py-3 bg-surface border-t border-line">
+                  <Link2 size={13} className="text-primary shrink-0" />
+                  <span className="text-xs flex-1 truncate font-mono text-ink">
+                    {`${appUrl}/convite/${f.inviteToken}`}
+                  </span>
+                  <button
+                    onClick={() => copiarConvite(f.inviteToken!, f.id)}
+                    className="flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-md shrink-0"
+                    style={{
+                      background: copiadoId === f.id ? "#3F6B58" : "#DCE5DA",
+                      color: copiadoId === f.id ? "#fff" : "#2C4B3E",
+                    }}
+                  >
+                    {copiadoId === f.id ? <Check size={12} /> : <Copy size={12} />}{" "}
+                    {copiadoId === f.id ? "Copiado" : "Copiar"}
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>
