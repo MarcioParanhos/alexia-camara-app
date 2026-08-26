@@ -51,7 +51,7 @@ export default async function RelatoriosPage({ params }: { params: { id: string 
                 <Link
                   key={r.id}
                   href={`/dashboard/pacientes/${paciente.id}/relatorios/${r.id}`}
-                  className="flex items-center justify-between gap-3 rounded-xl p-4 bg-white border border-line block"
+                  className="flex items-center justify-between gap-3 rounded-xl p-4 bg-white border border-line hover:bg-surface transition-colors"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <FileText size={16} className="text-primary shrink-0" />
