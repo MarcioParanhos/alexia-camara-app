@@ -11,7 +11,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
       : [
           { href: "/dashboard", label: "Painel" },
           { href: "/dashboard/pacientes/novo", label: "Cadastrar paciente" },
-          { href: "/dashboard/perfil", label: "Meu perfil" },
+          // { href: "/dashboard/perfil", label: "Meu perfil" },
         ];
 
   return (
