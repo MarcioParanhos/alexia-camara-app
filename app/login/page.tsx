@@ -38,7 +38,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 sm:p-6" style={{ background: C.surface }}>
       <div
-        className="grid md:grid-cols-2 md:min-h-[640px] w-full max-w-4xl rounded-2xl overflow-hidden"
+        className="grid md:grid-cols-2 md:min-h-[640px] min-h-screen w-full rounded-2xl overflow-hidden"
         style={{ boxShadow: "0 20px 60px -20px rgba(34,41,31,0.35)" }}
       >
         <div
