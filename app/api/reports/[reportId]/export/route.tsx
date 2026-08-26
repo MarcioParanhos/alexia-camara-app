@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma";
 
 export const runtime = "nodejs";
 
-const styles = StyleSheet.create({
+const pdfStyles = StyleSheet.create({
   page: { padding: 24, fontSize: 12, fontFamily: "Helvetica" },
   header: { marginBottom: 12 },
   title: { fontSize: 20, marginBottom: 6 },
@@ -65,8 +65,8 @@ export async function GET(request: Request, { params }: { params: { reportId: st
 
   const Doc = (
     <Document>
-      <Page size="A4" style={styles.page}>
-        <View style={{ ...styles.header, borderBottomWidth: 1, borderBottomColor: "#eee", paddingBottom: 10 }}>
+      <Page size="A4" style={pdfStyles.page}>
+        <View style={{ ...pdfStyles.header, borderBottomWidth: 1, borderBottomColor: "#eee", paddingBottom: 10 }}>
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
             <View style={{ flexDirection: "row", alignItems: "center" }}>
               {logoUrl && <Image src={logoUrl} style={{ width: 64, height: 64, marginRight: 10 }} />}
