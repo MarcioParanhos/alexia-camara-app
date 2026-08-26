@@ -1,4 +1,5 @@
 import React from "react";
+import { NextResponse } from "next/server";
 import { pdf, Document, Page, Text, View, StyleSheet, Image } from "@react-pdf/renderer";
 import { prisma } from "@/lib/prisma";
 
@@ -19,7 +20,7 @@ export async function GET(request: Request, { params }: { params: { reportId: st
     include: { patient: true, generatedBy: { include: { professional: true } } },
   });
 
-  if (!report) return new Response(JSON.stringify({ error: "Relatório não encontrado" }), { status: 404 });
+  if (!report) return NextResponse.json({ error: "Relatório não encontrado" }, { status: 404 });
 
   const snapshot = report.snapshot ?? {};
   const professional = report.generatedBy?.professional;
@@ -111,9 +112,9 @@ export async function GET(request: Request, { params }: { params: { reportId: st
     </Document>
   );
 
-  const buffer = await pdf(Doc).toBuffer();
+  const buffer = (await pdf(Doc).toBuffer()) as any;
 
-  return new Response(buffer, {
+  return new NextResponse(buffer, {
     status: 200,
     headers: {
       "Content-Type": "application/pdf",
