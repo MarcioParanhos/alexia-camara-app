@@ -31,7 +31,7 @@ export default async function VerRelatorioPage({ params }: { params: { id: strin
           <Link href={`/dashboard/pacientes/${params.id}/relatorios`} className="text-xs text-inkFaint">
             ← Voltar aos relatórios
           </Link>
-          <BotaoExportarPdf />
+          <BotaoExportarPdf reportId={params.reportId} fileName={`relatorio-${params.reportId}.pdf`} />
         </div>
 
         <div className="print:hidden">
