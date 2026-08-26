@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { requireStaff } from "@/lib/session";
 import { podeAcessarPaciente } from "@/lib/patient-access";
 import { GerarRelatorioForm } from "./form";
+import { BackButton } from "@/components/back-button";
 
 export const dynamic = "force-dynamic";
 
@@ -27,9 +28,9 @@ export default async function RelatoriosPage({ params }: { params: { id: string 
 
   return (
     <div className="rounded-2xl p-5 sm:p-8 bg-bg">
-      <Link href={`/dashboard/pacientes/${paciente.id}`} className="text-xs mb-6 flex items-center gap-1 text-inkFaint">
-        ← Voltar ao prontuário
-      </Link>
+      <div className="flex justify-end mb-6">
+              <BackButton />
+            </div>
 
       <p className="text-xs uppercase tracking-[0.18em] mb-1 text-inkFaint">{paciente.name}</p>
       <h2 className="text-xl sm:text-2xl font-display font-semibold text-ink mb-7">Relatórios de evolução</h2>
