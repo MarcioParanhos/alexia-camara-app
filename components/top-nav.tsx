@@ -28,6 +28,7 @@ export function TopNav({
   const [menuMobileOpen, setMenuMobileOpen] = useState(false);
   const [confirmSairAberto, setConfirmSairAberto] = useState(false);
   const [saindo, setSaindo] = useState(false);
+  const [rolado, setRolado] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const mobileRef = useRef<HTMLDivElement | null>(null);
   const trailRef = useRef<HTMLDivElement | null>(null);
@@ -58,6 +59,16 @@ export function TopNav({
   useEffect(() => {
     setMenuMobileOpen(false);
   }, [pathname]);
+
+  // sombra só aparece depois que a página começa a rolar
+  useEffect(() => {
+    function onScroll() {
+      setRolado(window.scrollY > 4);
+    }
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -101,7 +112,13 @@ export function TopNav({
     .join("");
 
   return (
-    <div className="relative border-b border-line bg-white">
+    <div
+      className="sticky top-0 z-40 border-b bg-white transition-shadow duration-200"
+      style={{
+        borderColor: "#E4E7DE",
+        boxShadow: rolado ? "0 4px 12px -6px rgba(34, 41, 31, 0.12)" : "none",
+      }}
+    >
       <div className="max-w-6xl mx-auto px-3 sm:px-6 py-3 flex items-center justify-between gap-4">
         <Link
           href="/dashboard"
@@ -212,7 +229,11 @@ export function TopNav({
 
       {/* painel mobile — mesma linguagem visual do dropdown desktop */}
       {menuMobileOpen && (
-        <div ref={mobileRef} role="menu" className="md:hidden absolute left-0 right-0 top-full bg-white border-t border-line shadow-lg z-50">
+        <div
+          ref={mobileRef}
+          role="menu"
+          className="md:hidden absolute left-0 right-0 top-full bg-white border-t border-line shadow-lg z-50 max-h-[calc(100vh-56px)] overflow-y-auto"
+        >
           <div className="max-w-6xl mx-auto px-3 py-3">
             <div className="flex items-center gap-2.5 px-1 py-2.5 mb-1">
               <span
