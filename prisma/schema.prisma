@@ -265,3 +265,20 @@ model Report {
   @@index([patientId])
   @@map("reports")
 }
+
+enum ProfessionalInviteStatus {
+  PENDENTE
+  ACEITO
+}
+
+model ProfessionalInvite {
+  id         String                   @id @default(cuid())
+  name       String
+  email      String                   @unique
+  token      String                   @unique
+  status     ProfessionalInviteStatus @default(PENDENTE)
+  invitedAt  DateTime                 @default(now())
+  acceptedAt DateTime?
+
+  @@map("professional_invites")
+}

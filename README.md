@@ -111,11 +111,10 @@ Acesse `http://localhost:3000`.
 
 ## O que ainda falta
 
-1. PDF do relatório hoje é gerado via impressão do navegador (`window.print()`, com CSS `print:hidden` nos botões); um PDF gerado no servidor (ex: Puppeteer) ficaria mais consistente entre navegadores, mas não é obrigatório para funcionar
+1. PDF do relatório hoje é gerado via impressão do navegador (`window.print()`, com CSS `print:hidden` nos botões); um PDF gerado no servidor (ex: Puppeteer) ficaria mais consistente entre navegadores, mas não é obrigatório para funcionar. ✅
 2. Envio de e-mail real no convite de familiar (hoje o link aparece na tela para copiar manualmente)
 3. Tela de cadastro de profissionais pelo admin (hoje só existe a Alexia, criada via seed)
 4. Em produção, trocar o storage local de anexos (`uploads/` em disco) por um provedor externo (S3, Cloudflare R2 etc.) — funciona bem para um servidor único, mas não escala para múltiplas instâncias
-5. Rodar `npm install` e testar o build de ponta a ponta — não foi possível aqui por falta de acesso à internet neste ambiente
 
 ## Observações de segurança para produção
 
