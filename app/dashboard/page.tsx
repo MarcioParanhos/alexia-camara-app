@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { requireStaff } from "@/lib/session";
 import { Avatar } from "@/components/avatar";
 import { PainelPacientes } from "@/components/painel-pacientes";
+import { getSaudacao } from "@/lib/saudacao";
 
 export const dynamic = "force-dynamic";
 
@@ -44,7 +45,10 @@ export default async function PainelPage() {
 
   const listaComAdesao = pacientes.map((p) => {
     const totalPrevisto = p.phases.reduce((s, f) => s + f.plannedSessions, 0);
-    const adesao = totalPrevisto > 0 ? Math.min(100, Math.round((p._count.evolutions / totalPrevisto) * 100)) : null;
+    const adesao =
+      totalPrevisto > 0
+        ? Math.min(100, Math.round((p._count.evolutions / totalPrevisto) * 100))
+        : null;
     const idade = p.birthDate ? calcularIdade(p.birthDate) : null;
     const ultima = p.evolutions[0]?.sessionDate ?? null;
     return {
@@ -60,9 +64,14 @@ export default async function PainelPage() {
   const comAdesaoDefinida = listaComAdesao.filter((p) => p.adesao !== null);
   const adesaoMedia =
     comAdesaoDefinida.length > 0
-      ? Math.round(comAdesaoDefinida.reduce((s, p) => s + (p.adesao ?? 0), 0) / comAdesaoDefinida.length)
+      ? Math.round(
+          comAdesaoDefinida.reduce((s, p) => s + (p.adesao ?? 0), 0) /
+            comAdesaoDefinida.length,
+        )
       : null;
-  const precisamAtencao = listaComAdesao.filter((p) => p.adesao !== null && p.adesao < 80).length;
+  const precisamAtencao = listaComAdesao.filter(
+    (p) => p.adesao !== null && p.adesao < 80,
+  ).length;
 
   const nomeExibicao = (session.user.name ?? "").split(" ")[0] || "";
 
@@ -70,26 +79,104 @@ export default async function PainelPage() {
     <div className="rounded-2xl p-5 sm:p-8 bg-bg">
       <div className="flex items-start sm:items-center justify-between gap-4 mb-6 sm:mb-8">
         <div>
-          <p className="text-[11px] sm:text-xs uppercase tracking-[0.18em] mb-1 text-inkFaint">Painel do profissional</p>
-          <h2 className="text-xl sm:text-2xl font-display font-semibold text-ink">Bom dia, {nomeExibicao || "por aqui"}</h2>
+          <p className="text-[11px] sm:text-xs uppercase tracking-[0.18em] mb-1 text-inkFaint">
+            Painel do profissional
+          </p>
+          <h2 className="text-xl sm:text-2xl font-display font-semibold text-ink">
+            {getSaudacao()}, {nomeExibicao || "por aqui"}
+          </h2>
         </div>
-        <Avatar nome={session.user.name ?? "?"} size={38} />
+       
       </div>
 
       {/* Resumo real */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-7">
         {[
-          { label: "Pacientes ativos", valor: pacientes.length, icon: Users },
-          { label: "Sessões esta semana", valor: sessoesEstaSemana, icon: Calendar },
-          { label: "Adesão média", valor: adesaoMedia !== null ? `${adesaoMedia}%` : "—", icon: TrendingUp },
-          { label: "Precisam de atenção", valor: precisamAtencao, icon: Activity },
-        ].map((s, i) => (
-          <div key={i} className="rounded-xl p-4 sm:p-5 bg-white border border-line">
-            <s.icon size={15} className="mb-3 text-primary" />
-            <p className="text-xl sm:text-2xl font-mono text-ink">{s.valor}</p>
-            <p className="text-[11px] sm:text-xs mt-1 leading-tight text-inkFaint">{s.label}</p>
-          </div>
-        ))}
+          {
+            label: "Pacientes ativos",
+            valor: pacientes.length,
+            icon: Users,
+            tom: "neutro" as const,
+          },
+          {
+            label: "Sessões esta semana",
+            valor: sessoesEstaSemana,
+            icon: Calendar,
+            tom: "neutro" as const,
+          },
+          {
+            label: "Adesão média",
+            valor: adesaoMedia !== null ? `${adesaoMedia}%` : "—",
+            icon: TrendingUp,
+            tom: "neutro" as const,
+            progresso: adesaoMedia,
+          },
+          {
+            label: "Precisam de atenção",
+            valor: precisamAtencao,
+            icon: Activity,
+            tom:
+              precisamAtencao > 0 ? ("alerta" as const) : ("neutro" as const),
+          },
+        ].map((s, i) => {
+          const alerta = s.tom === "alerta";
+          return (
+            <div
+              key={i}
+              className="relative rounded-xl p-4 sm:p-5 bg-white border overflow-hidden transition-colors"
+              style={{ borderColor: alerta ? "#E9C77E" : "#E4E7DE" }}
+            >
+              {alerta && (
+                <span
+                  aria-hidden
+                  className="absolute top-0 left-0 right-0 h-[3px]"
+                  style={{ background: "#D9A441" }}
+                />
+              )}
+
+              <div className="flex items-center justify-between mb-3.5">
+                <span
+                  className="w-8 h-8 rounded-full flex items-center justify-center"
+                  style={{ background: alerta ? "#F6E7C6" : "#DCE5DA" }}
+                >
+                  <s.icon
+                    size={14}
+                    color={alerta ? "#9A6A1E" : "#2C4B3E"}
+                    strokeWidth={2.25}
+                  />
+                </span>
+                {alerta && (
+                  <span className="relative flex h-2 w-2">
+                    <span
+                      className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+                      style={{ background: "#D9A441" }}
+                    />
+                    <span
+                      className="relative inline-flex rounded-full h-2 w-2"
+                      style={{ background: "#D9A441" }}
+                    />
+                  </span>
+                )}
+              </div>
+
+              <p className="text-xl sm:text-2xl font-mono tabular-nums text-ink">
+                {s.valor}
+              </p>
+              <p className="text-[11px] uppercase tracking-wide mt-1.5 leading-tight text-inkFaint">
+                {s.label}
+              </p>
+
+              {typeof s.progresso === "number" && (
+                <span className="block h-1 rounded-full overflow-hidden mt-3 bg-surfaceAlt">
+                  <span
+                    className="block h-full rounded-full bg-accent"
+                    style={{ width: `${s.progresso}%` }}
+                  />
+                </span>
+              )}
+            </div>
+          );
+        })}
       </div>
 
       <div className="flex justify-end mb-4">
