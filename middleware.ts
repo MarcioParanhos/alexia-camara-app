@@ -4,10 +4,12 @@ import { NextResponse } from "next/server";
 /**
  * Regras de acesso por área:
  * - /admin        -> só ADMIN (gestão de usuários, profissionais)
- * - /dashboard    -> ADMIN e PROFISSIONAL (painel, pacientes, evoluções, relatórios)
- * - /portal       -> FAMILIAR (visão somente-leitura do paciente vinculado)
+ * - /dashboard    -> só PROFISSIONAL (painel, pacientes, evoluções, relatórios)
+ * - /portal       -> só FAMILIAR (visão somente-leitura do paciente vinculado)
  * - /acesso/[token] -> público, validado à parte via AccessLink (não passa por aqui)
  * - /login        -> público
+ *
+ * ADMIN não navega pelas áreas operacionais — é redirecionado direto para /admin.
  */
 export default withAuth(
   function middleware(req) {
@@ -18,19 +20,28 @@ export default withAuth(
       return NextResponse.redirect(new URL("/nao-autorizado", req.url));
     }
 
-    if (pathname.startsWith("/dashboard") && role !== "ADMIN" && role !== "PROFISSIONAL") {
-      return NextResponse.redirect(new URL("/nao-autorizado", req.url));
+    if (pathname.startsWith("/dashboard")) {
+      if (role === "ADMIN") {
+        return NextResponse.redirect(new URL("/admin", req.url));
+      }
+      if (role !== "PROFISSIONAL") {
+        return NextResponse.redirect(new URL("/nao-autorizado", req.url));
+      }
     }
 
-    if (pathname.startsWith("/portal") && role !== "FAMILIAR" && role !== "ADMIN") {
-      return NextResponse.redirect(new URL("/nao-autorizado", req.url));
+    if (pathname.startsWith("/portal")) {
+      if (role === "ADMIN") {
+        return NextResponse.redirect(new URL("/admin", req.url));
+      }
+      if (role !== "FAMILIAR") {
+        return NextResponse.redirect(new URL("/nao-autorizado", req.url));
+      }
     }
 
     return NextResponse.next();
   },
   {
     callbacks: {
-      // Só exige estar logado — as regras de papel acima decidem o resto
       authorized: ({ token }) => !!token,
     },
     pages: {
