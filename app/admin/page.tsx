@@ -4,6 +4,7 @@ import { Avatar } from "@/components/avatar";
 import { Users, ShieldCheck, Activity, UserCog, Plus } from "lucide-react";
 import { PainelNovoProfissional } from "@/components/painel-novo-profissional";
 import { CopiarLink } from "@/components/copiar-link";
+import { ExcluirConviteProfissional } from "@/components/excluir-convite-profissional";
 
 export const dynamic = "force-dynamic";
 
@@ -154,13 +155,16 @@ export default async function AdminPage() {
                   >
                     Pendente
                   </span>
+                  <ExcluirConviteProfissional id={c.id} nome={c.name} />
                 </div>
                 <div className="flex items-center gap-2 px-4 py-3 bg-surface border-t border-line">
-  <span className="text-xs flex-1 truncate font-mono text-ink">
-    {`${process.env.NEXT_PUBLIC_APP_URL ?? ""}/convite-profissional/${c.token}`}
-  </span>
-  <CopiarLink url={`${process.env.NEXT_PUBLIC_APP_URL ?? ""}/convite-profissional/${c.token}`} />
-</div>
+                  <span className="text-xs flex-1 truncate font-mono text-ink">
+                    {`${process.env.NEXT_PUBLIC_APP_URL ?? ""}/convite-profissional/${c.token}`}
+                  </span>
+                  <CopiarLink
+                    url={`${process.env.NEXT_PUBLIC_APP_URL ?? ""}/convite-profissional/${c.token}`}
+                  />
+                </div>
               </div>
             ))}
           </div>
