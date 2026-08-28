@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/session";
 import { Avatar } from "@/components/avatar";
 import { Users, ShieldCheck, Activity, UserCog, Plus } from "lucide-react";
 import { PainelNovoProfissional } from "@/components/painel-novo-profissional";
+import { CopiarLink } from "@/components/copiar-link";
 
 export const dynamic = "force-dynamic";
 
@@ -155,10 +156,11 @@ export default async function AdminPage() {
                   </span>
                 </div>
                 <div className="flex items-center gap-2 px-4 py-3 bg-surface border-t border-line">
-                  <span className="text-xs flex-1 truncate font-mono text-ink">
-                    {`${process.env.NEXT_PUBLIC_APP_URL ?? ""}/convite-profissional/${c.token}`}
-                  </span>
-                </div>
+  <span className="text-xs flex-1 truncate font-mono text-ink">
+    {`${process.env.NEXT_PUBLIC_APP_URL ?? ""}/convite-profissional/${c.token}`}
+  </span>
+  <CopiarLink url={`${process.env.NEXT_PUBLIC_APP_URL ?? ""}/convite-profissional/${c.token}`} />
+</div>
               </div>
             ))}
           </div>
