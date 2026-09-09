@@ -37,6 +37,7 @@ model User {
 
   // Presente quando role = FAMILIAR e o convite já foi aceito
   familyMemberships FamilyMember[]
+  passwordResetTokens PasswordResetToken[]
 
   evolutionsAuthored Evolution[] @relation("EvolutionAuthor")
   reportsGenerated   Report[]    @relation("ReportGeneratedBy")
@@ -281,4 +282,16 @@ model ProfessionalInvite {
   acceptedAt DateTime?
 
   @@map("professional_invites")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@map("password_reset_tokens")
 }

@@ -5,6 +5,7 @@ import { Users, ShieldCheck, Activity, UserCog, Plus } from "lucide-react";
 import { PainelNovoProfissional } from "@/components/painel-novo-profissional";
 import { CopiarLink } from "@/components/copiar-link";
 import { ExcluirConviteProfissional } from "@/components/excluir-convite-profissional";
+import { AcoesUsuario } from "@/components/acoes-usuario";
 
 export const dynamic = "force-dynamic";
 
@@ -182,6 +183,7 @@ export default async function AdminPage() {
               <th className="px-4 py-3 font-normal">E-mail</th>
               <th className="px-4 py-3 font-normal">Papel</th>
               <th className="px-4 py-3 font-normal">Status</th>
+              <th className="px-4 py-3 font-normal w-12"></th>
             </tr>
           </thead>
           <tbody>
@@ -194,14 +196,17 @@ export default async function AdminPage() {
                     {ROLE_LABEL[u.role] ?? u.role}
                   </span>
                 </td>
-                <td className="px-4 py-3">
-                  <span className="inline-flex items-center gap-1.5 text-xs text-inkFaint">
+                <td className="px-4 py-3 text-inkFaint">
+                  <span className="inline-flex items-center gap-1.5 text-xs">
                     <span
                       className="w-1.5 h-1.5 rounded-full"
                       style={{ background: u.active ? "#3F6B58" : "#C7CBC0" }}
                     />
                     {u.active ? "Ativo" : "Inativo"}
                   </span>
+                </td>
+                <td className="px-4 py-3 text-right">
+                  <AcoesUsuario id={u.id} nome={u.name} />
                 </td>
               </tr>
             ))}
@@ -216,13 +221,16 @@ export default async function AdminPage() {
                 <p className="text-sm font-medium text-ink truncate">
                   {u.name}
                 </p>
-                <span className="inline-flex items-center gap-1.5 text-[11px] text-inkFaint shrink-0">
-                  <span
-                    className="w-1.5 h-1.5 rounded-full"
-                    style={{ background: u.active ? "#3F6B58" : "#C7CBC0" }}
-                  />
-                  {u.active ? "Ativo" : "Inativo"}
-                </span>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="inline-flex items-center gap-1.5 text-[11px] text-inkFaint">
+                    <span
+                      className="w-1.5 h-1.5 rounded-full"
+                      style={{ background: u.active ? "#3F6B58" : "#C7CBC0" }}
+                    />
+                    {u.active ? "Ativo" : "Inativo"}
+                  </span>
+                  <AcoesUsuario id={u.id} nome={u.name} />
+                </div>
               </div>
               <p className="text-xs text-inkFaint truncate mb-2">{u.email}</p>
               <span className="text-[11px] px-2 py-1 rounded-full bg-primary-soft text-primary-dark">
