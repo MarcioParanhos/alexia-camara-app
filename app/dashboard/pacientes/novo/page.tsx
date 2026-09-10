@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Trash2, Target, Check } from "lucide-react";
+import { SeletorRiscos } from "@/components/seletor-riscos";
 
 const CORES_FASE = ["#3F6B58", "#B9812F", "#6B5B95", "#A94A3D", "#3F7C8C"];
 
@@ -20,6 +21,7 @@ export default function NovoPacientePage() {
   const [diagnostico, setDiagnostico] = useState("");
   const [encaminhadoPor, setEncaminhadoPor] = useState("");
   const [historico, setHistorico] = useState("");
+  const [riscos, setRiscos] = useState<string[]>([]);
   const [fases, setFases] = useState<Fase[]>([
     { nome: "", objetivo: "", sessoes: 6 },
   ]);
@@ -56,6 +58,7 @@ export default function NovoPacientePage() {
           diagnosis: diagnostico || undefined,
           referredBy: encaminhadoPor || undefined,
           clinicalHistory: historico || undefined,
+          riskFlags: riscos,
           phases: fases
             .filter((f) => f.nome.trim())
             .map((f) => ({ name: f.nome, objective: f.objetivo || undefined, plannedSessions: Number(f.sessoes) || 1 })),
@@ -130,6 +133,9 @@ export default function NovoPacientePage() {
           <label className="text-xs mb-1.5 block text-inkSoft">Histórico e observações iniciais</label>
           <textarea rows={4} value={historico} onChange={(e) => setHistorico(e.target.value)} className="w-full rounded-lg px-3.5 py-2.5 text-sm outline-none resize-none bg-surface border border-line" />
         </div>
+
+        {/* Riscos e alertas */}
+        <SeletorRiscos riscos={riscos} onChange={setRiscos} />
 
         {/* Fases da trilha */}
         <div>

@@ -53,6 +53,7 @@ const createPatientSchema = z.object({
   diagnosis: z.string().optional(),
   referredBy: z.string().optional(),
   clinicalHistory: z.string().optional(),
+  riskFlags: z.array(z.string()).optional(),
   phases: z
     .array(
       z.object({

@@ -15,6 +15,7 @@ import { requireStaff } from "@/lib/session";
 import { podeAcessarPaciente } from "@/lib/patient-access";
 import { Avatar } from "@/components/avatar";
 import { PainelAnexos, AnexosEvolucaoToggle } from "@/components/anexos";
+import { BadgesRisco } from "@/components/badges-risco";
 
 export const dynamic = "force-dynamic";
 
@@ -87,6 +88,8 @@ export default async function ProntuarioPage({
           <p className="text-sm mb-5 text-inkFaint">
             {idade !== null ? `${idade} anos` : "Idade não informada"}
           </p>
+
+          <BadgesRisco riscos={paciente.riskFlags} />
 
           <div className="space-y-4 text-sm">
             <div>
