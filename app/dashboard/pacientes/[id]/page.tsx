@@ -8,6 +8,7 @@ import {
   Sparkles,
   FileText,
   UserPlus,
+  Pencil,
 } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { requireStaff } from "@/lib/session";
@@ -70,7 +71,16 @@ export default async function ProntuarioPage({
       <div className="grid lg:grid-cols-[280px_1fr] gap-6 lg:gap-8">
         {/* Sidebar paciente */}
         <div className="rounded-xl p-6 h-fit bg-white border border-line">
-          <Avatar nome={paciente.name} size={64} />
+          <div className="flex items-start justify-between gap-2">
+            <Avatar nome={paciente.name} size={64} />
+            <Link
+              href={`/dashboard/pacientes/${paciente.id}/editar`}
+              aria-label="Editar dados do paciente"
+              className="p-1.5 rounded-md text-inkFaint hover:bg-surface hover:text-ink transition-colors"
+            >
+              <Pencil size={14} />
+            </Link>
+          </div>
           <h3 className="text-xl mt-4 mb-1 font-display font-semibold text-ink">
             {paciente.name}
           </h3>
