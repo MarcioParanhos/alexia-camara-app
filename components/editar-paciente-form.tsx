@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Trash2, Target, Check } from "lucide-react";
+import { SeletorRiscos } from "@/components/seletor-riscos";
 
 const CORES_FASE = ["#3F6B58", "#B9812F", "#6B5B95", "#A94A3D", "#3F7C8C"];
 
@@ -18,6 +19,7 @@ type PacienteInicial = {
   referredBy: string | null;
   clinicalHistory: string | null;
   status: "EM_TRATAMENTO" | "ALTA" | "PAUSADO";
+  riskFlags: string[];
   phases: { id: string; name: string; objective: string | null; plannedSessions: number }[];
 };
 
@@ -46,6 +48,7 @@ export function EditarPacienteForm({ paciente }: { paciente: PacienteInicial }) 
   const [encaminhadoPor, setEncaminhadoPor] = useState(paciente.referredBy ?? "");
   const [historico, setHistorico] = useState(paciente.clinicalHistory ?? "");
   const [status, setStatus] = useState(paciente.status);
+  const [riscos, setRiscos] = useState<string[]>(paciente.riskFlags ?? []);
   const [fases, setFases] = useState<Fase[]>(
     paciente.phases.length > 0
       ? paciente.phases.map((f) => ({ id: f.id, nome: f.name, objetivo: f.objective ?? "", sessoes: f.plannedSessions }))
@@ -96,6 +99,7 @@ export function EditarPacienteForm({ paciente }: { paciente: PacienteInicial }) 
           referredBy: encaminhadoPor || undefined,
           clinicalHistory: historico || undefined,
           status,
+          riskFlags: riscos,
           phases: fases
             .filter((f) => f.nome.trim())
             .map((f) => ({
@@ -196,6 +200,9 @@ export function EditarPacienteForm({ paciente }: { paciente: PacienteInicial }) 
             className="w-full rounded-lg px-3.5 py-2.5 text-sm outline-none resize-none bg-surface border border-line overflow-hidden"
           />
         </div>
+
+        {/* Riscos e alertas */}
+        <SeletorRiscos riscos={riscos} onChange={setRiscos} />
 
         {/* Fases da trilha */}
         <div>
