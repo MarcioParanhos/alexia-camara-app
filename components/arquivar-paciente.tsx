@@ -3,9 +3,12 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Archive, X } from "lucide-react";
+import { useToast } from "@/components/toast-provider";
+
 
 export function ArquivarPaciente({ id, nome }: { id: string; nome: string }) {
   const router = useRouter();
+  const mostrarToast = useToast();
   const [modalAberto, setModalAberto] = useState(false);
   const [arquivando, setArquivando] = useState(false);
 
@@ -13,6 +16,7 @@ export function ArquivarPaciente({ id, nome }: { id: string; nome: string }) {
     setArquivando(true);
     try {
       await fetch(`/api/patients/${id}/archive`, { method: "POST" });
+      mostrarToast(`${nome} foi arquivado com sucesso.`, "sucesso");
       router.push("/dashboard");
       router.refresh();
     } finally {

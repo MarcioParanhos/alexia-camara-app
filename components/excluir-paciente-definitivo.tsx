@@ -3,15 +3,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Trash2, X, AlertTriangle } from "lucide-react";
+import { useToast } from "@/components/toast-provider";
 
-export function ExcluirPacienteDefinitivo({
-  id,
-  nome,
-}: {
-  id: string;
-  nome: string;
-}) {
+export function ExcluirPacienteDefinitivo({ id, nome }: { id: string; nome: string }) {
   const router = useRouter();
+  const mostrarToast = useToast();
   const [modalAberto, setModalAberto] = useState(false);
   const [confirmacao, setConfirmacao] = useState("");
   const [excluindo, setExcluindo] = useState(false);
@@ -30,10 +26,13 @@ export function ExcluirPacienteDefinitivo({
         const data = await resp.json().catch(() => ({}));
         throw new Error(data?.error || "Não foi possível excluir o paciente.");
       }
+      mostrarToast(`${nome} foi excluído definitivamente.`, "sucesso");
       router.refresh();
       fechar();
     } catch (err) {
-      setErro(err instanceof Error ? err.message : "Erro inesperado.");
+      const mensagem = err instanceof Error ? err.message : "Erro inesperado.";
+      setErro(mensagem);
+      mostrarToast(mensagem, "erro");
     } finally {
       setExcluindo(false);
     }
@@ -123,7 +122,7 @@ export function ExcluirPacienteDefinitivo({
                 style={{ background: "#B8452F" }}
               >
                 <Trash2 size={14} />{" "}
-                {excluindo ? "Excluindo..." : "Excluir para sempre"}
+                {excluindo ? "Excluindo..." : "Excluir"}
               </button>
             </div>
           </div>
