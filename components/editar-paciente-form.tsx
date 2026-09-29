@@ -19,7 +19,7 @@ type PacienteInicial = {
   diagnosis: string | null;
   referredBy: string | null;
   clinicalHistory: string | null;
-  status: "EM_TRATAMENTO" | "ALTA" | "PAUSADO";
+  status: "EM_TRATAMENTO" | "ALTA" | "PAUSADO" | "ARQUIVADO";
   riskFlags: string[];
   phases: {
     id: string;
@@ -240,6 +240,7 @@ export function EditarPacienteForm({
                 <option value="EM_TRATAMENTO">Em tratamento</option>
                 <option value="PAUSADO">Pausado</option>
                 <option value="ALTA">Alta</option>
+                <option value="ARQUIVADO">Arquivado</option>
               </select>
             </div>
           </div>
