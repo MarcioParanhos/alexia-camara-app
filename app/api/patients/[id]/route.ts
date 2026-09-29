@@ -31,10 +31,11 @@ const updatePatientSchema = z.object({
   referredBy: z.string().optional(),
   clinicalHistory: z.string().optional(),
   status: z.enum(["EM_TRATAMENTO", "ALTA", "PAUSADO"]).optional(),
+  riskFlags: z.array(z.string()).optional(),
   phases: z
     .array(
       z.object({
-        id: z.string().optional(), // presente = fase já existente
+        id: z.string().optional(),
         name: z.string().min(1),
         objective: z.string().optional(),
         plannedSessions: z.number().int().min(1),

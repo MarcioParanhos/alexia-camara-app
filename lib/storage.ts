@@ -1,11 +1,6 @@
-import { mkdir, writeFile, unlink } from "fs/promises";
-import path from "path";
 import { randomUUID } from "crypto";
-
-// Guardado FORA de /public de propósito: dados de paciente são sensíveis,
-// então o arquivo só é servido através de /api/files/[attachmentId],
-// que confere a sessão antes de entregar qualquer coisa.
-const UPLOAD_ROOT = path.join(process.cwd(), "uploads");
+import { PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { r2, R2_BUCKET } from "@/lib/r2";
 
 const TIPOS_PERMITIDOS = [
   "image/jpeg",
@@ -30,38 +25,40 @@ export function validarArquivo(file: File) {
 }
 
 /**
- * Salva o arquivo em uploads/patients/{patientId}/{uuid-nome-original}
- * e retorna o caminho relativo (guardado em Attachment.url) e o nome
+ * Envia o arquivo para o bucket R2 em patients/{patientId}/{uuid-extensao}
+ * e retorna a "key" do objeto (guardada em Attachment.url) e o nome
  * original (guardado em Attachment.fileName).
+ *
+ * O bucket é PRIVADO — arquivos só são acessíveis via URL assinada
+ * temporária, gerada em /api/files/[attachmentId] após checar a sessão.
  */
 export async function salvarArquivo(file: File, patientId: string) {
-  const dir = path.join(UPLOAD_ROOT, "patients", patientId);
-  await mkdir(dir, { recursive: true });
-
-  const extensao = path.extname(file.name) || "";
+  const extensao = file.name.includes(".") ? file.name.slice(file.name.lastIndexOf(".")) : "";
   const nomeArmazenado = `${randomUUID()}${extensao}`;
-  const caminhoAbsoluto = path.join(dir, nomeArmazenado);
+  const key = `patients/${patientId}/${nomeArmazenado}`;
 
   const bytes = Buffer.from(await file.arrayBuffer());
-  await writeFile(caminhoAbsoluto, bytes);
 
-  const caminhoRelativo = path.join("patients", patientId, nomeArmazenado);
+  await r2.send(
+    new PutObjectCommand({
+      Bucket: R2_BUCKET,
+      Key: key,
+      Body: bytes,
+      ContentType: file.type || "application/octet-stream",
+    }),
+  );
 
   return {
-    relativePath: caminhoRelativo,
+    relativePath: key,
     fileName: file.name,
     fileType: file.type || "application/octet-stream",
   };
 }
 
-export async function removerArquivo(relativePath: string) {
+export async function removerArquivo(key: string) {
   try {
-    await unlink(path.join(UPLOAD_ROOT, relativePath));
+    await r2.send(new DeleteObjectCommand({ Bucket: R2_BUCKET, Key: key }));
   } catch {
-    // se o arquivo já não existe em disco, ainda assim seguimos removendo o registro
+    // se o objeto já não existe no bucket, ainda assim seguimos removendo o registro
   }
-}
-
-export function caminhoAbsoluto(relativePath: string) {
-  return path.join(UPLOAD_ROOT, relativePath);
 }
