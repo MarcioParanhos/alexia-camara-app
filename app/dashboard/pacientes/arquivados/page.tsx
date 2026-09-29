@@ -60,7 +60,7 @@ export default async function PacientesArquivadosPage() {
                   {p.diagnosis || "Sem diagnóstico"}
                 </p>
               </div>
-              <DesarquivarPaciente id={p.id} />
+              <DesarquivarPaciente id={p.id} nome={p.name} />
               <ExcluirPacienteDefinitivo id={p.id} nome={p.name} />
             </div>
           ))}
