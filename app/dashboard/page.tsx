@@ -15,7 +15,10 @@ export default async function PainelPage() {
   const professionalId = session.user.professionalId ?? "__none__";
 
   const pacientes = await prisma.patient.findMany({
-    where: isAdmin ? {} : { professionalId },
+    where: {
+      status: { not: "ARQUIVADO" },
+      ...(isAdmin ? {} : { professionalId }),
+    },
     select: {
       id: true,
       name: true,
@@ -86,7 +89,6 @@ export default async function PainelPage() {
             {getSaudacao()}, {nomeExibicao || "por aqui"}
           </h2>
         </div>
-       
       </div>
 
       {/* Resumo real */}

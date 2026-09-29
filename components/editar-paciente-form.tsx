@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Trash2, Target, Check } from "lucide-react";
 import { SeletorRiscos } from "@/components/seletor-riscos";
+import { ArquivarPaciente } from "@/components/arquivar-paciente";
 
 const CORES_FASE = ["#3F6B58", "#B9812F", "#6B5B95", "#A94A3D", "#3F7C8C"];
 
@@ -20,7 +21,12 @@ type PacienteInicial = {
   clinicalHistory: string | null;
   status: "EM_TRATAMENTO" | "ALTA" | "PAUSADO";
   riskFlags: string[];
-  phases: { id: string; name: string; objective: string | null; plannedSessions: number }[];
+  phases: {
+    id: string;
+    name: string;
+    objective: string | null;
+    plannedSessions: number;
+  }[];
 };
 
 function paraInputDate(data: Date | string | null) {
@@ -34,28 +40,52 @@ function autoResize(e: React.ChangeEvent<HTMLTextAreaElement>) {
   el.style.height = `${el.scrollHeight}px`;
 }
 
-export function EditarPacienteForm({ paciente }: { paciente: PacienteInicial }) {
+export function EditarPacienteForm({
+  paciente,
+}: {
+  paciente: PacienteInicial;
+}) {
   const router = useRouter();
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [sucesso, setSucesso] = useState(false);
 
   const [nome, setNome] = useState(paciente.name);
-  const [nascimento, setNascimento] = useState(paraInputDate(paciente.birthDate));
+  const [nascimento, setNascimento] = useState(
+    paraInputDate(paciente.birthDate),
+  );
   const [telefone, setTelefone] = useState(paciente.phone ?? "");
   const [email, setEmail] = useState(paciente.email ?? "");
   const [diagnostico, setDiagnostico] = useState(paciente.diagnosis ?? "");
-  const [encaminhadoPor, setEncaminhadoPor] = useState(paciente.referredBy ?? "");
+  const [encaminhadoPor, setEncaminhadoPor] = useState(
+    paciente.referredBy ?? "",
+  );
   const [historico, setHistorico] = useState(paciente.clinicalHistory ?? "");
   const [status, setStatus] = useState(paciente.status);
   const [riscos, setRiscos] = useState<string[]>(paciente.riskFlags ?? []);
   const [fases, setFases] = useState<Fase[]>(
     paciente.phases.length > 0
-      ? paciente.phases.map((f) => ({ id: f.id, nome: f.name, objetivo: f.objective ?? "", sessoes: f.plannedSessions }))
+      ? paciente.phases.map((f) => ({
+          id: f.id,
+          nome: f.name,
+          objetivo: f.objective ?? "",
+          sessoes: f.plannedSessions,
+        }))
       : [{ nome: "", objetivo: "", sessoes: 6 }],
   );
 
   const historicoRef = useRef<HTMLTextAreaElement | null>(null);
+  async function arquivar() {
+    if (
+      !confirm(
+        `Arquivar ${paciente.name}? Ele sairá da lista principal, mas os dados continuam salvos.`,
+      )
+    )
+      return;
+    await fetch(`/api/patients/${paciente.id}/archive`, { method: "POST" });
+    router.push("/dashboard");
+    router.refresh();
+  }
 
   useEffect(() => {
     const el = historicoRef.current;
@@ -117,9 +147,11 @@ export function EditarPacienteForm({ paciente }: { paciente: PacienteInicial }) 
           typeof data?.error === "string"
             ? data.error
             : data?.error?.fieldErrors
-            ? Object.values(data.error.fieldErrors).flat()[0]
-            : "Não foi possível salvar as alterações.";
-        throw new Error((msg as string) || "Não foi possível salvar as alterações.");
+              ? Object.values(data.error.fieldErrors).flat()[0]
+              : "Não foi possível salvar as alterações.";
+        throw new Error(
+          (msg as string) || "Não foi possível salvar as alterações.",
+        );
       }
 
       setSucesso(true);
@@ -136,32 +168,70 @@ export function EditarPacienteForm({ paciente }: { paciente: PacienteInicial }) 
 
   return (
     <div className="min-h-screen p-5 sm:p-8 bg-bg">
-      <p className="text-xs uppercase tracking-[0.18em] mb-1 text-inkFaint">Editar paciente</p>
-      <h2 className="text-xl sm:text-2xl font-display font-semibold text-ink mb-6">{paciente.name}</h2>
+      <p className="text-xs uppercase tracking-[0.18em] mb-1 text-inkFaint">
+        Editar paciente
+      </p>
+      <h2 className="text-xl sm:text-2xl font-display font-semibold text-ink mb-6">
+        {paciente.name}
+      </h2>
 
-      <form onSubmit={handleSubmit} className="rounded-xl p-5 sm:p-7 bg-white border border-line space-y-8 w-full h-full">
+      <form
+        onSubmit={handleSubmit}
+        className="rounded-xl p-5 sm:p-7 bg-white border border-line space-y-8 w-full h-full"
+      >
         {/* Dados pessoais */}
         <div>
-          <h3 className="text-lg font-display font-semibold text-ink mb-4">Dados pessoais</h3>
+          <h3 className="text-lg font-display font-semibold text-ink mb-4">
+            Dados pessoais
+          </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
-              <label className="text-xs mb-1.5 block text-inkSoft">Nome completo *</label>
-              <input value={nome} onChange={(e) => setNome(e.target.value)} required className="w-full rounded-lg px-3.5 py-2.5 text-sm outline-none bg-surface border border-line" />
+              <label className="text-xs mb-1.5 block text-inkSoft">
+                Nome completo *
+              </label>
+              <input
+                value={nome}
+                onChange={(e) => setNome(e.target.value)}
+                required
+                className="w-full rounded-lg px-3.5 py-2.5 text-sm outline-none bg-surface border border-line"
+              />
             </div>
             <div>
-              <label className="text-xs mb-1.5 block text-inkSoft">Data de nascimento</label>
-              <input type="date" value={nascimento} onChange={(e) => setNascimento(e.target.value)} className="w-full rounded-lg px-3.5 py-2.5 text-sm outline-none bg-surface border border-line" />
+              <label className="text-xs mb-1.5 block text-inkSoft">
+                Data de nascimento
+              </label>
+              <input
+                type="date"
+                value={nascimento}
+                onChange={(e) => setNascimento(e.target.value)}
+                className="w-full rounded-lg px-3.5 py-2.5 text-sm outline-none bg-surface border border-line"
+              />
             </div>
             <div>
-              <label className="text-xs mb-1.5 block text-inkSoft">Telefone</label>
-              <input value={telefone} onChange={(e) => setTelefone(e.target.value)} className="w-full rounded-lg px-3.5 py-2.5 text-sm outline-none bg-surface border border-line" />
+              <label className="text-xs mb-1.5 block text-inkSoft">
+                Telefone
+              </label>
+              <input
+                value={telefone}
+                onChange={(e) => setTelefone(e.target.value)}
+                className="w-full rounded-lg px-3.5 py-2.5 text-sm outline-none bg-surface border border-line"
+              />
             </div>
             <div className="sm:col-span-2">
-              <label className="text-xs mb-1.5 block text-inkSoft">E-mail</label>
-              <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full rounded-lg px-3.5 py-2.5 text-sm outline-none bg-surface border border-line" />
+              <label className="text-xs mb-1.5 block text-inkSoft">
+                E-mail
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full rounded-lg px-3.5 py-2.5 text-sm outline-none bg-surface border border-line"
+              />
             </div>
             <div>
-              <label className="text-xs mb-1.5 block text-inkSoft">Status do tratamento</label>
+              <label className="text-xs mb-1.5 block text-inkSoft">
+                Status do tratamento
+              </label>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as typeof status)}
@@ -177,18 +247,34 @@ export function EditarPacienteForm({ paciente }: { paciente: PacienteInicial }) 
 
         {/* Histórico clínico */}
         <div>
-          <h3 className="text-lg font-display font-semibold text-ink mb-4">Histórico clínico</h3>
+          <h3 className="text-lg font-display font-semibold text-ink mb-4">
+            Histórico clínico
+          </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
             <div>
-              <label className="text-xs mb-1.5 block text-inkSoft">Diagnóstico principal</label>
-              <input value={diagnostico} onChange={(e) => setDiagnostico(e.target.value)} className="w-full rounded-lg px-3.5 py-2.5 text-sm outline-none bg-surface border border-line" />
+              <label className="text-xs mb-1.5 block text-inkSoft">
+                Diagnóstico principal
+              </label>
+              <input
+                value={diagnostico}
+                onChange={(e) => setDiagnostico(e.target.value)}
+                className="w-full rounded-lg px-3.5 py-2.5 text-sm outline-none bg-surface border border-line"
+              />
             </div>
             <div>
-              <label className="text-xs mb-1.5 block text-inkSoft">Encaminhado por</label>
-              <input value={encaminhadoPor} onChange={(e) => setEncaminhadoPor(e.target.value)} className="w-full rounded-lg px-3.5 py-2.5 text-sm outline-none bg-surface border border-line" />
+              <label className="text-xs mb-1.5 block text-inkSoft">
+                Encaminhado por
+              </label>
+              <input
+                value={encaminhadoPor}
+                onChange={(e) => setEncaminhadoPor(e.target.value)}
+                className="w-full rounded-lg px-3.5 py-2.5 text-sm outline-none bg-surface border border-line"
+              />
             </div>
           </div>
-          <label className="text-xs mb-1.5 block text-inkSoft">Histórico e observações iniciais</label>
+          <label className="text-xs mb-1.5 block text-inkSoft">
+            Histórico e observações iniciais
+          </label>
           <textarea
             ref={historicoRef}
             rows={4}
@@ -206,14 +292,20 @@ export function EditarPacienteForm({ paciente }: { paciente: PacienteInicial }) 
 
         {/* Fases da trilha */}
         <div>
-          <h3 className="text-lg font-display font-semibold text-ink mb-1.5">Fases da trilha de tratamento</h3>
+          <h3 className="text-lg font-display font-semibold text-ink mb-1.5">
+            Fases da trilha de tratamento
+          </h3>
           <p className="text-sm text-inkSoft mb-4">
-            Fases já existentes são atualizadas. Remover uma fase aqui a exclui definitivamente da trilha.
+            Fases já existentes são atualizadas. Remover uma fase aqui a exclui
+            definitivamente da trilha.
           </p>
 
           <div className="space-y-3 mb-3">
             {fases.map((f, i) => (
-              <div key={f.id ?? `nova-${i}`} className="rounded-xl p-4 flex flex-col sm:flex-row gap-3 bg-surface border border-line">
+              <div
+                key={f.id ?? `nova-${i}`}
+                className="rounded-xl p-4 flex flex-col sm:flex-row gap-3 bg-surface border border-line"
+              >
                 <div
                   className="w-7 h-7 rounded-full flex items-center justify-center text-xs text-white shrink-0 font-mono"
                   style={{ background: CORES_FASE[i % CORES_FASE.length] }}
@@ -241,7 +333,9 @@ export function EditarPacienteForm({ paciente }: { paciente: PacienteInicial }) 
                       type="number"
                       min={1}
                       value={f.sessoes}
-                      onChange={(e) => updateFase(i, "sessoes", Number(e.target.value))}
+                      onChange={(e) =>
+                        updateFase(i, "sessoes", Number(e.target.value))
+                      }
                       className="w-12 bg-transparent outline-none text-sm text-right font-mono"
                     />
                     <span className="text-[10px] text-inkFaint">sessões</span>
@@ -254,13 +348,18 @@ export function EditarPacienteForm({ paciente }: { paciente: PacienteInicial }) 
             ))}
           </div>
 
-          <button type="button" onClick={addFase} className="flex items-center gap-1.5 text-sm px-3.5 py-2 rounded-lg text-primary bg-primary-soft">
+          <button
+            type="button"
+            onClick={addFase}
+            className="flex items-center gap-1.5 text-sm px-3.5 py-2 rounded-lg text-primary bg-primary-soft"
+          >
             <Plus size={14} /> Adicionar fase
           </button>
 
           {totalSessoes > 0 && (
             <p className="text-xs mt-3 text-inkFaint">
-              Total previsto: <span className="font-mono text-ink">{totalSessoes} sessões</span>
+              Total previsto:{" "}
+              <span className="font-mono text-ink">{totalSessoes} sessões</span>
             </p>
           )}
         </div>
@@ -268,7 +367,8 @@ export function EditarPacienteForm({ paciente }: { paciente: PacienteInicial }) 
         {erro && <p className="text-sm text-attention">{erro}</p>}
         {sucesso && <p className="text-sm text-primary">Alterações salvas!</p>}
 
-        <div className="flex items-center justify-end gap-3 pt-4 border-t border-line">
+        <div className="flex items-center justify-between gap-3 pt-4 border-t border-line">
+          <ArquivarPaciente id={paciente.id} nome={paciente.name} />
           <button
             type="submit"
             disabled={salvando}

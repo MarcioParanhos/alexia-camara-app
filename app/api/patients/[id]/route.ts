@@ -4,6 +4,8 @@ import { z } from "zod";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { podeAcessarPaciente, podeEditarPaciente } from "@/lib/patient-access";
+import { DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { r2, R2_BUCKET } from "@/lib/r2";
 
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
   const session = await getServerSession(authOptions);
@@ -30,7 +32,7 @@ const updatePatientSchema = z.object({
   diagnosis: z.string().optional(),
   referredBy: z.string().optional(),
   clinicalHistory: z.string().optional(),
-  status: z.enum(["EM_TRATAMENTO", "ALTA", "PAUSADO"]).optional(),
+  status: z.enum(["EM_TRATAMENTO", "ALTA", "PAUSADO", "ARQUIVADO"]).optional(),
   riskFlags: z.array(z.string()).optional(),
   phases: z
     .array(
@@ -112,4 +114,45 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   });
 
   return NextResponse.json({ patient });
+}
+
+export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
+  const session = await getServerSession(authOptions);
+  if (!session || !podeEditarPaciente(session)) {
+    return NextResponse.json({ error: "Sem permissão." }, { status: 403 });
+  }
+
+  const acesso = await podeAcessarPaciente(session, params.id);
+  if (!acesso) return NextResponse.json({ error: "Paciente não encontrado." }, { status: 404 });
+
+  const patient = await prisma.patient.findUnique({
+    where: { id: params.id },
+    select: { status: true, name: true },
+  });
+  if (!patient) return NextResponse.json({ error: "Paciente não encontrado." }, { status: 404 });
+
+  if (patient.status !== "ARQUIVADO") {
+    return NextResponse.json(
+      { error: "Só é possível excluir definitivamente pacientes já arquivados." },
+      { status: 409 },
+    );
+  }
+
+  // Busca os anexos ANTES de apagar o paciente, pra saber quais arquivos remover do R2
+  const anexos = await prisma.attachment.findMany({
+    where: { patientId: params.id },
+    select: { url: true },
+  });
+
+  // Apaga o paciente — o cascade do Postgres cuida de Evolution, TreatmentPhase,
+  // FamilyMember, AccessLink, Report e Attachment automaticamente
+  await prisma.patient.delete({ where: { id: params.id } });
+
+  // Limpa os arquivos órfãos no bucket (fora da transação — se algum falhar,
+  // o registro já não existe mais no banco, não bloqueia o restante)
+  await Promise.allSettled(
+    anexos.map((a) => r2.send(new DeleteObjectCommand({ Bucket: R2_BUCKET, Key: a.url }))),
+  );
+
+  return NextResponse.json({ ok: true });
 }

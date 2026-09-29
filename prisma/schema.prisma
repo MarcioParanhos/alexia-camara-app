@@ -79,6 +79,7 @@ enum PatientStatus {
   EM_TRATAMENTO
   ALTA
   PAUSADO
+  ARQUIVADO
 }
 
 model Patient {
