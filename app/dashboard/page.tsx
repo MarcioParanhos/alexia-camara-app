@@ -125,7 +125,7 @@ export default async function PainelPage() {
           return (
             <div
               key={i}
-              className="relative rounded-xl p-4 sm:p-5 bg-white border overflow-hidden transition-colors"
+              className="relative rounded-xl p-4 sm:p-5 bg-white border overflow-hidden transition-colors box-shadow-card"
               style={{ borderColor: alerta ? "#E9C77E" : "#E4E7DE" }}
             >
               {alerta && (

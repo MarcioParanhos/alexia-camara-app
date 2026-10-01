@@ -17,6 +17,7 @@ export default {
           dark: "#2C4B3E",
           soft: "#DCE5DA",
         },
+        
         accent: {
           DEFAULT: "#B9812F",
           soft: "#F1E2C2",
@@ -28,9 +29,8 @@ export default {
         line: "#DDD5C4",
       },
       fontFamily: {
-        display: ["Fraunces", "serif"],
-        body: ["IBM Plex Sans", "sans-serif"],
-        mono: ["IBM Plex Mono", "monospace"],
+        display: ['"Nunito"', "sans-serif"],
+        sans: ['"Nunito"', "sans-serif"],
       },
     },
   },

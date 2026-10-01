@@ -9,13 +9,13 @@ export function BackButton() {
   return (
     <button
       onClick={() => router.back()}
-      className="group  inline-flex items-center text-white bg-[#3F6B58] gap-1.5 rounded-md px-2 py-2 text-xs font-medium  transition-colors hover:text-ink hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black/10"
+      className="group inline-flex items-center gap-2 rounded-full pl-1.5 pr-4 py-1.5 text-xs font-medium text-white transition-all hover:gap-2.5 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#3F6B58]"
+      style={{ background: "#3F6B58" }}
     >
-      <ArrowLeft
-        className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-0.5"
-        strokeWidth={2}
-      />
-     Voltar
+      <span className="flex items-center justify-center w-6 h-6 rounded-full bg-white/15 transition-transform group-hover:-translate-x-0.5">
+        <ArrowLeft size={13} strokeWidth={2.5} />
+      </span>
+      Voltar
     </button>
   );
 }

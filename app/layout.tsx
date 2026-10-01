@@ -4,10 +4,10 @@ import { Providers } from "./providers";
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL 
   ? new URL(process.env.NEXT_PUBLIC_APP_URL) 
-  : new URL('https://alexia-camara-app.vercel.app'); // Fallback seguro para o build
+  : new URL('https://alexia-camara-app.vercel.app');
 
 export const metadata: Metadata = {
-  title: "Alexia Câmara — Prontuário",
+  title: "Alexia Câmara",
   description: "Prontuário eletrônico de fisioterapia",
 };
 
