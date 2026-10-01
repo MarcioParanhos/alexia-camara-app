@@ -16,6 +16,7 @@ import { podeAcessarPaciente } from "@/lib/patient-access";
 import { Avatar } from "@/components/avatar";
 import { PainelAnexos, AnexosEvolucaoToggle } from "@/components/anexos";
 import { BadgesRisco } from "@/components/badges-risco";
+import { HistoricoClinico } from "@/components/historico-clinico";
 
 export const dynamic = "force-dynamic";
 
@@ -179,6 +180,8 @@ export default async function ProntuarioPage({
             <TrendingUp size={14} /> Evolução ({paciente.evolutions.length}{" "}
             registro{paciente.evolutions.length === 1 ? "" : "s"})
           </div>
+
+           <HistoricoClinico historico={paciente.clinicalHistory} />
 
           {paciente.evolutions.length === 0 ? (
             <div className="rounded-xl p-8 text-center bg-white border border-dashed border-line">
