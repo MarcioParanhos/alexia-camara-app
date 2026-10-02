@@ -15,9 +15,9 @@ export type PacienteResumo = {
 };
 
 const FILTROS = [
-  { key: "todos", label: "Todos" },
-  { key: "dia", label: "Em dia" },
-  { key: "atencao", label: "Atenção necessária" },
+  { key: "todos", label: "Todos", labelCurto: "Todos" },
+  { key: "dia", label: "Em dia", labelCurto: "Em dia" },
+  { key: "atencao", label: "Atenção necessária", labelCurto: "Atenção" },
 ] as const;
 
 function corStatus(adesao: number | null) {
@@ -51,42 +51,45 @@ export function PainelPacientes({ pacientes }: { pacientes: PacienteResumo[] }) 
   );
 
   return (
-    <div>
+    <div className="w-full min-w-0">
       <div className="flex items-center gap-2 rounded-lg px-3.5 py-2.5 mb-4 box-shadow-card bg-white border border-line transition-colors focus-within:border-primary">
         <Search size={15} className="text-inkFaint shrink-0" />
         <input
           value={busca}
           onChange={(e) => setBusca(e.target.value)}
           placeholder="Buscar paciente pelo nome..."
-          className="bg-transparent outline-none w-full text-sm"
+          className="bg-transparent outline-none w-full text-sm min-w-0"
         />
       </div>
 
-      <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-1 " style={{ scrollbarWidth: "none" }} >
-        {FILTROS.map((f) => (
-          <button
-            key={f.key}
-            onClick={() => setFiltro(f.key)}
-            className="flex items-center gap-1.5 text-xs px-3.5 py-1.5 rounded-full shrink-0 whitespace-nowrap transition-colors box-shadow-card"
-            style={{
-              background: filtro === f.key ? "#3F6B58" : "#fff",
-              color: filtro === f.key ? "#fff" : "#5B6157",
-              border: `1px solid ${filtro === f.key ? "#3F6B58" : "#DDD5C4"}`,
-            }}
-          >
-            {f.label}
-            <span
-              className="text-[10px] px-1.5 rounded-full "
-              style={{
-                background: filtro === f.key ? "rgba(255,255,255,0.2)" : "#F1EEE4",
-                color: filtro === f.key ? "#fff" : "#8A8F7F",
-              }}
-            >
-              {contagens[f.key]}
-            </span>
-          </button>
-        ))}
-      </div>
+      <div className="grid grid-cols-3 gap-2 mb-6 sm:flex sm:items-center sm:gap-2">
+  {FILTROS.map((f) => (
+    <button
+      key={f.key}
+      onClick={() => setFiltro(f.key)}
+      className="flex items-center justify-center gap-1.5 text-xs px-2 sm:px-3.5 py-1.5 rounded-full whitespace-nowrap transition-colors box-shadow-card"
+      style={{
+        background: filtro === f.key ? "#3F6B58" : "#fff",
+        color: filtro === f.key ? "#fff" : "#5B6157",
+        border: `1px solid ${filtro === f.key ? "#3F6B58" : "#DDD5C4"}`,
+      }}
+    >
+      <span className="truncate">
+        <span className="sm:hidden">{f.labelCurto}</span>
+        <span className="hidden sm:inline">{f.label}</span>
+      </span>
+      <span
+        className="text-[10px] px-1.5 rounded-full shrink-0"
+        style={{
+          background: filtro === f.key ? "rgba(255,255,255,0.2)" : "#F1EEE4",
+          color: filtro === f.key ? "#fff" : "#8A8F7F",
+        }}
+      >
+        {contagens[f.key]}
+      </span>
+    </button>
+  ))}
+</div>
 
       {filtrados.length === 0 ? (
         <div className="rounded-xl p-10 text-center bg-white border border-dashed border-line box-shadow-card">
@@ -96,7 +99,7 @@ export function PainelPacientes({ pacientes }: { pacientes: PacienteResumo[] }) 
           </p>
         </div>
       ) : (
-        <div className="grid sm:grid-cols-2 gap-4 ">
+        <div className="grid sm:grid-cols-2 gap-4 w-full min-w-0">
           {filtrados.map((p) => {
             const cor = corStatus(p.adesao);
             const progresso = p.adesao ?? 0;
@@ -104,10 +107,10 @@ export function PainelPacientes({ pacientes }: { pacientes: PacienteResumo[] }) 
               <Link
                 key={p.id}
                 href={`/dashboard/pacientes/${p.id}`}
-                className="group relative text-left rounded-xl p-5 transition-all hover:-translate-y-0.5 bg-white border block box-shadow-card"
+                className="group relative text-left rounded-xl p-5 transition-all hover:-translate-y-0.5 bg-white border block box-shadow-card w-full min-w-0 overflow-hidden"
                 style={{ borderColor: "#E4E7DE" }}
               >
-                <div className="flex items-start gap-3.5 mb-4 ">
+                <div className="flex items-start flex-wrap gap-y-2 gap-x-3.5 mb-4">
                   {/* anel de progresso ao redor do avatar — a trilha, em miniatura */}
                   <div
                     className="relative shrink-0 rounded-full p-[3px]"
@@ -123,7 +126,7 @@ export function PainelPacientes({ pacientes }: { pacientes: PacienteResumo[] }) 
                     </div>
                   </div>
 
-                  <div className="min-w-0 flex-1 pt-0.5">
+                  <div className="min-w-0 flex-1 pt-0.5 basis-[140px]">
                     <p className="text-[15px] truncate font-display font-semibold text-ink">{p.name}</p>
                     <p className="text-xs mt-0.5 text-inkFaint">
                       {p.idade !== null ? `${p.idade} anos` : "Idade não informada"}
@@ -131,13 +134,13 @@ export function PainelPacientes({ pacientes }: { pacientes: PacienteResumo[] }) 
                   </div>
 
                   {p.adesao !== null && p.adesao < 80 && (
-                    <span className="flex items-center gap-1 text-[10px] px-2 py-1 rounded-full shrink-0 bg-attention-soft text-attention">
-                      <span className="w-1 h-1 rounded-full bg-attention" /> Atenção
+                    <span className="flex items-center gap-1 text-[10px] px-2 py-1 rounded-full shrink-0 bg-attention-soft text-attention ml-auto">
+                      <span className="w-1 h-1 rounded-full bg-attention shrink-0" /> Atenção
                     </span>
                   )}
                 </div>
 
-                <p className="text-[13px] leading-relaxed mb-4 line-clamp-2 text-inkSoft">
+                <p className="text-[13px] leading-relaxed mb-4 line-clamp-2 text-inkSoft break-words">
                   {p.diagnosis || "Diagnóstico não informado"}
                 </p>
 
@@ -147,7 +150,7 @@ export function PainelPacientes({ pacientes }: { pacientes: PacienteResumo[] }) 
                     {p.ultima ? formatarData(p.ultima) : "Sem registros"}
                   </span>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 shrink-0">
                     {p.adesao !== null && (
                       <span className="text-xs font-mono tabular-nums" style={{ color: cor }}>
                         {p.adesao}%
