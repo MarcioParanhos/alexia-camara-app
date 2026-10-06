@@ -8,19 +8,19 @@ export default {
       colors: {
         bg: "#FAF8F3",
         surface: "#F1ECE1",
-        surfaceAlt: "#EBE6D9",
+        surfaceAlt: "#F7ADAD",
         ink: "#22291F",
         inkSoft: "#5B6157",
         inkFaint: "#8A8F7F",
         primary: {
-          DEFAULT: "#3F6B58",
+          DEFAULT: "#F7ADAD",
           dark: "#2C4B3E",
           soft: "#DCE5DA",
         },
         
         accent: {
           DEFAULT: "#B9812F",
-          soft: "#F1E2C2",
+          soft: "#F7ADAD",
         },
         attention: {
           DEFAULT: "#A94A3D",

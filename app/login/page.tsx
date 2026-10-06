@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { C } from "@/lib/design-tokens";
 
+
 const ETAPAS = [
   { icon: ClipboardList, cx: 40, cy: 150 },
   { icon: Activity, cx: 120, cy: 90 },
@@ -91,14 +92,20 @@ export default function LoginPage() {
 
           {/* bloco principal — agora ocupa o espaço restante e se centraliza nele */}
           <div className="relative z-10 flex-1 flex flex-col items-center justify-center text-center">
-            <h1 className="text-white text-center text-4xl sm:text-5xl md:text-6xl leading-[0.95] font-display italic font-medium mb-6">
+            {/* <h1 className="text-white text-center text-4xl sm:text-5xl md:text-6xl leading-[0.95] font-display italic font-medium mb-6">
               Alexia
               <br />
               Câmara
-            </h1>
+            </h1> */}
+
+            <img
+              src="image/AlexiaLogo.png"
+              alt="Descrição da imagem"
+              className="w-full max-w-[350px] h-auto -ml-1 mb-6"
+            />
 
             {/* trilha ilustrada: avaliação → sessões → evolução → alta */}
-            <svg
+            {/* <svg
               aria-hidden
               viewBox="0 0 320 190"
               className="w-full max-w-[280px] h-auto -ml-1 mb-6"
@@ -135,7 +142,7 @@ export default function LoginPage() {
                   </foreignObject>
                 </g>
               ))}
-            </svg>
+            </svg> */}
 
             <p className="text-white/75 max-w-xs text-[15px] leading-relaxed">
               Cada sessão é um passo. Aqui você acompanha a trilha de
@@ -220,7 +227,7 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="flex items-center gap-4 flex-wrap mt-8 pt-6 border-t border-line">
+          <div className="flex items-center justify-center gap-4 flex-wrap mt-8 pt-6 border-t border-line">
             {[
               { icon: ShieldCheck, label: "Administrador" },
               { icon: Activity, label: "Fisioterapeuta" },
