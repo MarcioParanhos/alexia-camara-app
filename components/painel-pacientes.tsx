@@ -69,9 +69,9 @@ export function PainelPacientes({ pacientes }: { pacientes: PacienteResumo[] }) 
       onClick={() => setFiltro(f.key)}
       className="flex items-center justify-center gap-1.5 text-xs px-2 sm:px-3.5 py-1.5 rounded-full whitespace-nowrap transition-colors box-shadow-card"
       style={{
-        background: filtro === f.key ? "#F7ADAD" : "#fff",
+        background: filtro === f.key ? "#8EA66B" : "#fff",
         color: filtro === f.key ? "#fff" : "#5B6157",
-        border: `1px solid ${filtro === f.key ? "#F7ADAD" : "#DDD5C4"}`,
+        border: `1px solid ${filtro === f.key ? "#8EA66B" : "#DDD5C4"}`,
       }}
     >
       <span className="truncate">

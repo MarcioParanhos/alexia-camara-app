@@ -142,7 +142,7 @@ export function TopNav({
             <span
               aria-hidden
               className="absolute bottom-0 h-[2px] rounded-full transition-all duration-300 ease-out"
-              style={{ left: marker.left, width: marker.width, background: "#3F6B58" }}
+              style={{ left: marker.left, width: marker.width, background: "#8EA66B" }}
             />
           )}
           {filteredLinks.map((l, i) => {
@@ -175,7 +175,7 @@ export function TopNav({
             >
               <span
                 className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-semibold shrink-0"
-                style={{ background: "#3F6B58", color: "#fff" }}
+                style={{ background: "#8EA66B", color: "#fff" }}
               >
                 {iniciais || "?"}
               </span>
@@ -238,7 +238,7 @@ export function TopNav({
             <div className="flex items-center gap-2.5 px-1 py-2.5 mb-1">
               <span
                 className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold shrink-0"
-                style={{ background: "#3F6B58", color: "#fff" }}
+                style={{ background: "#8EA66B", color: "#fff" }}
               >
                 {iniciais || "?"}
               </span>
@@ -253,9 +253,9 @@ export function TopNav({
                     <Link
                       href={l.href}
                       className="flex items-center gap-2.5 px-2.5 py-2.5 text-sm rounded-md"
-                      style={{ color: ativo ? "#22291F" : "#5B6157" }}
+                      style={{ color: ativo ? "#8EA66B" : "#8EA66B" }}
                     >
-                      <span className="w-1 h-1 rounded-full shrink-0" style={{ background: ativo ? "#3F6B58" : "transparent" }} />
+                      <span className="w-1 h-1 rounded-full shrink-0" style={{ background: ativo ? "#8EA66B" : "transparent" }} />
                       {l.label}
                     </Link>
                   </li>
