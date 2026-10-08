@@ -19,7 +19,7 @@ export default {
         },
         
         accent: {
-          DEFAULT: "#D8A2A2",
+          DEFAULT: "#FFF9D6",
           soft: "#8EA66B",
         },
         attention: {
