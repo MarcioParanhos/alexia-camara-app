@@ -181,7 +181,7 @@ export default async function ProntuarioPage({
             registro{paciente.evolutions.length === 1 ? "" : "s"})
           </div>
 
-           <HistoricoClinico historico={paciente.clinicalHistory} />
+          <HistoricoClinico historico={paciente.clinicalHistory} />
 
           {paciente.evolutions.length === 0 ? (
             <div className="rounded-xl p-8 text-center bg-white border border-dashed border-line">
@@ -202,16 +202,16 @@ export default async function ProntuarioPage({
                   key={ev.id}
                   className="rounded-xl p-4 sm:p-5 mb-4 bg-white border border-line"
                 >
-                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2 mb-2">
-                    <div>
-                      <p className="text-[15px] font-display font-semibold text-ink">
+                  <div className="flex items-start justify-between gap-3 mb-2">
+                    <div className="min-w-0">
+                      <p className="text-[15px] font-display font-semibold text-ink break-words">
                         {ev.title}
                       </p>
                       <p className="text-xs mt-0.5 font-mono text-inkFaint">
                         {formatarData(ev.sessionDate)} · {ev.author.name}
                       </p>
                     </div>
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3 sm:gap-4 shrink-0">
                       {ev.painLevel !== null && (
                         <div className="flex items-center gap-1.5">
                           <span className="text-lg leading-none font-mono text-ink">
@@ -230,11 +230,24 @@ export default async function ProntuarioPage({
                           <p className="text-[10px] text-inkFaint">amplitude</p>
                         </div>
                       )}
+                      <Link
+                        href={`/dashboard/pacientes/${paciente.id}/evolucoes/${ev.id}/editar`}
+                        aria-label={`Editar ${ev.title}`}
+                        title="Editar sessão"
+                        className="p-1.5 -mr-1.5 rounded-md text-inkFaint hover:bg-surface hover:text-ink transition-colors"
+                      >
+                        <Pencil size={14} />
+                      </Link>
                     </div>
                   </div>
                   <p className="text-sm leading-relaxed text-inkSoft whitespace-pre-line">
                     {ev.note}
                   </p>
+                  {foiEditada(ev.createdAt, ev.updatedAt) && (
+                    <p className="text-[11px] mt-2 italic text-inkFaint">
+                      Editada em {formatarDataHora(ev.updatedAt)}
+                    </p>
+                  )}
                   {ev.highlighted && (
                     <span className="inline-flex items-center gap-1 mt-3 text-xs px-2.5 py-1 rounded-full bg-accent-soft text-accent">
                       <Sparkles size={11} /> Marco em destaque
@@ -268,5 +281,21 @@ function formatarData(data: Date) {
     day: "2-digit",
     month: "short",
     year: "numeric",
+  }).format(new Date(data));
+}
+
+// só considera "editada" se a alteração veio mais de 1 minuto depois da criação
+function foiEditada(criada: Date, atualizada: Date) {
+  return new Date(atualizada).getTime() - new Date(criada).getTime() > 60_000;
+}
+
+function formatarDataHora(data: Date) {
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    timeZone: "America/Sao_Paulo",
   }).format(new Date(data));
 }
