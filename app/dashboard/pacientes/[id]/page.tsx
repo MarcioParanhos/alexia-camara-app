@@ -17,6 +17,8 @@ import { Avatar } from "@/components/avatar";
 import { PainelAnexos, AnexosEvolucaoToggle } from "@/components/anexos";
 import { BadgesRisco } from "@/components/badges-risco";
 import { HistoricoClinico } from "@/components/historico-clinico";
+import { AbasMes } from "@/components/abas-mes";
+import { agruparPorMes, mesAtual } from "@/lib/meses";
 
 export const dynamic = "force-dynamic";
 
@@ -63,6 +65,85 @@ export default async function ProntuarioPage({
         )
       : null;
   const idade = paciente.birthDate ? calcularIdade(paciente.birthDate) : null;
+
+    const chaveAtual = mesAtual();
+  const abas = agruparPorMes(paciente.evolutions).map((mes) => ({
+    chave: mes.chave,
+    rotulo: mes.rotulo,
+    total: mes.items.length,
+    conteudo:
+      mes.items.length === 0 ? (
+        <div className="rounded-xl p-8 text-center bg-white border border-dashed border-line">
+          <p className="text-sm text-inkFaint mb-4">
+            Nenhuma sessão registrada em {mes.rotulo} ainda.
+          </p>
+          <Link
+            href={`/dashboard/pacientes/${paciente.id}/nova-evolucao`}
+            className="text-sm text-primary underline"
+          >
+            Registrar sessão
+          </Link>
+        </div>
+      ) : (
+        <div>
+          {mes.items.map((ev) => (
+            <div
+              key={ev.id}
+              className="rounded-xl p-4 sm:p-5 mb-4 bg-white border border-line"
+            >
+              <div className="flex items-start justify-between gap-3 mb-2">
+                <div className="min-w-0">
+                  <p className="text-[15px] font-display font-semibold text-ink break-words">
+                    {ev.title}
+                  </p>
+                  <p className="text-xs mt-0.5 font-mono text-inkFaint">
+                    {formatarData(ev.sessionDate)} · {ev.author.name}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3 sm:gap-4 shrink-0">
+                  {ev.painLevel !== null && (
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-lg leading-none font-mono text-ink">{ev.painLevel}</span>
+                      <span className="text-[10px] text-inkFaint">/10 EVA</span>
+                    </div>
+                  )}
+                  {ev.romDegrees !== null && (
+                    <div className="text-right">
+                      <p className="text-lg leading-none font-mono text-ink">{ev.romDegrees}°</p>
+                      <p className="text-[10px] text-inkFaint">amplitude</p>
+                    </div>
+                  )}
+                  <Link
+                    href={`/dashboard/pacientes/${paciente.id}/evolucoes/${ev.id}/editar`}
+                    aria-label={`Editar ${ev.title}`}
+                    title="Editar sessão"
+                    className="p-1.5 -mr-1.5 rounded-md text-inkFaint hover:bg-surface hover:text-ink transition-colors"
+                  >
+                    <Pencil size={14} />
+                  </Link>
+                </div>
+              </div>
+              <p className="text-sm leading-relaxed text-inkSoft whitespace-pre-line">{ev.note}</p>
+              {foiEditada(ev.createdAt, ev.updatedAt) && (
+                <p className="text-[11px] mt-2 italic text-inkFaint">
+                  Editada em {formatarDataHora(ev.updatedAt)}
+                </p>
+              )}
+              {ev.highlighted && (
+                <span className="inline-flex items-center gap-1 mt-3 text-xs px-2.5 py-1 rounded-full bg-accent-soft text-accent">
+                  <Sparkles size={11} /> Marco em destaque
+                </span>
+              )}
+              <AnexosEvolucaoToggle
+                patientId={paciente.id}
+                evolutionId={ev.id}
+                initialAnexos={ev.attachments}
+              />
+            </div>
+          ))}
+        </div>
+      ),
+  }));
 
   return (
     <div className="rounded-2xl p-5 sm:p-8 bg-bg">
@@ -183,85 +264,9 @@ export default async function ProntuarioPage({
 
           <HistoricoClinico historico={paciente.clinicalHistory} />
 
-          {paciente.evolutions.length === 0 ? (
-            <div className="rounded-xl p-8 text-center bg-white border border-dashed border-line">
-              <p className="text-sm text-inkFaint mb-4">
-                Nenhum registro de evolução ainda.
-              </p>
-              <Link
-                href={`/dashboard/pacientes/${paciente.id}/nova-evolucao`}
-                className="text-sm text-primary underline"
-              >
-                Criar o primeiro registro
-              </Link>
-            </div>
-          ) : (
-            <div>
-              {paciente.evolutions.map((ev) => (
-                <div
-                  key={ev.id}
-                  className="rounded-xl p-4 sm:p-5 mb-4 bg-white border border-line"
-                >
-                  <div className="flex items-start justify-between gap-3 mb-2">
-                    <div className="min-w-0">
-                      <p className="text-[15px] font-display font-semibold text-ink break-words">
-                        {ev.title}
-                      </p>
-                      <p className="text-xs mt-0.5 font-mono text-inkFaint">
-                        {formatarData(ev.sessionDate)} · {ev.author.name}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-3 sm:gap-4 shrink-0">
-                      {ev.painLevel !== null && (
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-lg leading-none font-mono text-ink">
-                            {ev.painLevel}
-                          </span>
-                          <span className="text-[10px] text-inkFaint">
-                            /10 EVA
-                          </span>
-                        </div>
-                      )}
-                      {ev.romDegrees !== null && (
-                        <div className="text-right">
-                          <p className="text-lg leading-none font-mono text-ink">
-                            {ev.romDegrees}°
-                          </p>
-                          <p className="text-[10px] text-inkFaint">amplitude</p>
-                        </div>
-                      )}
-                      <Link
-                        href={`/dashboard/pacientes/${paciente.id}/evolucoes/${ev.id}/editar`}
-                        aria-label={`Editar ${ev.title}`}
-                        title="Editar sessão"
-                        className="p-1.5 -mr-1.5 rounded-md text-inkFaint hover:bg-surface hover:text-ink transition-colors"
-                      >
-                        <Pencil size={14} />
-                      </Link>
-                    </div>
-                  </div>
-                  <p className="text-sm leading-relaxed text-inkSoft whitespace-pre-line">
-                    {ev.note}
-                  </p>
-                  {foiEditada(ev.createdAt, ev.updatedAt) && (
-                    <p className="text-[11px] mt-2 italic text-inkFaint">
-                      Editada em {formatarDataHora(ev.updatedAt)}
-                    </p>
-                  )}
-                  {ev.highlighted && (
-                    <span className="inline-flex items-center gap-1 mt-3 text-xs px-2.5 py-1 rounded-full bg-accent-soft text-accent">
-                      <Sparkles size={11} /> Marco em destaque
-                    </span>
-                  )}
-                  <AnexosEvolucaoToggle
-                    patientId={paciente.id}
-                    evolutionId={ev.id}
-                    initialAnexos={ev.attachments}
-                  />
-                </div>
-              ))}
-            </div>
-          )}
+          <AbasMes abas={abas} chaveAtual={chaveAtual} />
+
+          
         </div>
       </div>
     </div>

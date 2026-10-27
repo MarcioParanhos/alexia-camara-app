@@ -5,6 +5,7 @@ import { Avatar } from "@/components/avatar";
 import { RelatorioDocumento, type ReportSnapshot } from "@/components/relatorio-documento";
 import { HistoricoClinico } from "@/components/historico-clinico";
 import { Sparkles, Calendar, Activity, TrendingUp, Star, Footprints } from "lucide-react";
+import { mesAtual, intervaloDoMes, rotuloMesLongo } from "@/lib/meses";
 
 export const dynamic = "force-dynamic";
 
@@ -44,22 +45,33 @@ export default async function AcessoPublicoPage({ params }: { params: { token: s
     );
   }
 
-  // Link geral da trilha do paciente
+  // Link geral da trilha: só o mês vigente, filtrado no banco
+  const chaveAtual = mesAtual();
+  const { inicio, fim } = intervaloDoMes(chaveAtual);
+
   const paciente = await prisma.patient.findUnique({
     where: { id: link.patientId },
     include: {
-      evolutions: { orderBy: { sessionDate: "desc" } },
+      evolutions: {
+        where: { sessionDate: { gte: inicio, lt: fim } },
+        orderBy: { sessionDate: "desc" },
+      },
       phases: { orderBy: { order: "asc" } },
       professional: { select: { clinicName: true, brandColor: true } },
+      _count: { select: { evolutions: true } },
     },
   });
 
   if (!paciente) notFound();
 
   const totalPrevisto = paciente.phases.reduce((s, f) => s + f.plannedSessions, 0);
-  const adesao = totalPrevisto > 0 ? Math.min(100, Math.round((paciente.evolutions.length / totalPrevisto) * 100)) : null;
+  const totalRegistrado = paciente._count.evolutions;
+  const adesao =
+    totalPrevisto > 0 ? Math.min(100, Math.round((totalRegistrado / totalPrevisto) * 100)) : null;
+  const sessoesNoMes = paciente.evolutions.length;
   const ultimaDor = paciente.evolutions[0]?.painLevel ?? null;
   const marcos = paciente.evolutions.filter((e) => e.highlighted);
+  const nomeMes = rotuloMesLongo(chaveAtual);
   const brandColor = paciente.professional.brandColor || C.primary;
   const diasTratamento = paciente.startDate
     ? Math.max(0, Math.floor((Date.now() - new Date(paciente.startDate).getTime()) / 86400000))
@@ -70,7 +82,9 @@ export default async function AcessoPublicoPage({ params }: { params: { token: s
       <div className="max-w-5xl mx-auto px-4 sm:px-8 py-8 sm:py-12">
         <div className="flex items-center justify-between mb-7">
           <div>
-            <p className="text-xs uppercase tracking-[0.18em] mb-1 text-inkFaint">Acompanhamento — acesso somente leitura</p>
+            <p className="text-xs uppercase tracking-[0.18em] mb-1 text-inkFaint">
+              Acompanhamento — acesso somente leitura
+            </p>
             <h1 className="text-2xl sm:text-3xl font-display font-semibold text-ink">
               Como {paciente.name.split(" ")[0]} está indo
             </h1>
@@ -104,9 +118,11 @@ export default async function AcessoPublicoPage({ params }: { params: { token: s
             {paciente.professional.clinicName || "Fisioterapia"}
           </p>
           <p className="text-lg sm:text-xl leading-relaxed max-w-2xl font-display font-medium mb-4">
-            {paciente.evolutions.length > 0
-              ? `${paciente.evolutions.length} sessões registradas até agora, com acompanhamento contínuo da evolução.`
-              : "O tratamento ainda está começando — em breve os primeiros registros aparecem aqui."}
+            {totalRegistrado === 0
+              ? "O tratamento ainda está começando — em breve os primeiros registros aparecem aqui."
+              : sessoesNoMes === 0
+              ? `Ainda não há sessões registradas em ${nomeMes}. Assim que houver, elas aparecem aqui.`
+              : `${sessoesNoMes} ${sessoesNoMes === 1 ? "sessão registrada" : "sessões registradas"} em ${nomeMes}, com acompanhamento contínuo da evolução.`}
           </p>
 
           {diasTratamento !== null && (
@@ -125,7 +141,7 @@ export default async function AcessoPublicoPage({ params }: { params: { token: s
             style={{ background: "#E4E7DE" }}
           />
           {[
-            { label: "Sessões realizadas", valor: String(paciente.evolutions.length), icon: Calendar },
+            { label: "Sessões neste mês", valor: String(sessoesNoMes), icon: Calendar },
             { label: "Nível de dor mais recente", valor: ultimaDor !== null ? `${ultimaDor}/10` : "—", icon: Activity },
             { label: "Progresso do plano", valor: adesao !== null ? `${adesao}%` : "—", icon: TrendingUp },
           ].map((s, i) => (
@@ -142,7 +158,7 @@ export default async function AcessoPublicoPage({ params }: { params: { token: s
           ))}
         </div>
 
-        {/* Marcos — carrossel de destaques */}
+        {/* Marcos do mês */}
         {marcos.length > 0 && (
           <div className="mb-9">
             <p className="text-xs uppercase tracking-[0.18em] mb-4 text-inkFaint flex items-center gap-1.5">
@@ -165,14 +181,14 @@ export default async function AcessoPublicoPage({ params }: { params: { token: s
           </div>
         )}
 
-        <p className="text-xs uppercase tracking-[0.18em] mb-4 text-inkFaint">Linha do tempo</p>
+        <p className="text-xs uppercase tracking-[0.18em] mb-4 text-inkFaint">Linha do tempo · {nomeMes}</p>
 
         <HistoricoClinico historico={paciente.clinicalHistory} abertoPorPadrao />
 
         {paciente.evolutions.length === 0 ? (
           <div className="rounded-xl p-8 text-center bg-white border border-dashed border-line">
             <Footprints size={20} className="mx-auto mb-3 text-inkFaint" />
-            <p className="text-sm text-inkFaint">A trilha ainda vai começar — os primeiros passos aparecem aqui em breve.</p>
+            <p className="text-sm text-inkFaint">Ainda não há registros em {nomeMes}.</p>
           </div>
         ) : (
           <div>
@@ -223,9 +239,16 @@ export default async function AcessoPublicoPage({ params }: { params: { token: s
 }
 
 function formatarDataCurta(data: Date) {
-  return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short" }).format(new Date(data));
+  return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short", timeZone: "UTC" }).format(
+    new Date(data),
+  );
 }
 
 function formatarData(data: Date) {
-  return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "short", year: "numeric" }).format(new Date(data));
+  return new Intl.DateTimeFormat("pt-BR", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(data));
 }
